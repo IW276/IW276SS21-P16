@@ -54,4 +54,4 @@ This repo is based on
 Thanks to the original authors for their work!
 
 ## Contact
-Please email `mickael.cormier AT iosb.fraunhofer.de` for further questions.
+Please email [mickael.cormier AT iosb.fraunhofer.de](mailto:mickael.cormier@iosb.fraunhofer.de) for further questions.
