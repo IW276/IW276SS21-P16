@@ -53,7 +53,7 @@ If you want to start a container, you can use this command:
 docker run --runtime=nvidia -v soundtrack:/mnt/soundtrack -v out:/mnt/out docker.pkg.github.com/iw276/iw276ss21-p16/app:latest
 ```
 
-We are assume, that the tag latest exsists and references to the latest builded container image.
+We are assumed, that the tag latest exists and references to the latest built container image.
 
 
 ## Acknowledgments
