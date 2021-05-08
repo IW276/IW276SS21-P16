@@ -225,16 +225,16 @@ else:
   device = torch.device("cpu")
 print("using device: ", device)
 
-ix_to_class = {1:"Klimaanlage",
-                2:"Autohupe",
-                3:"Kinder Spielen",
-                4:"Hund bellt",
-                5:"Bohren",
-                6:"Motorgeräusche",
-                7:"Schuss",
-                8:"Presslufthammer",
-                9:"Sirene",
-                10:"Straßenmusik"}
+ix_to_class = { 0:"Klimaanlage",
+                1:"Autohupe",
+                2:"Kinder Spielen",
+                3:"Hund bellt",
+                4:"Bohren",
+                5:"Motorgeräusche",
+                6:"Schuss",
+                7:"Presslufthammer",
+                8:"Sirene",
+                9:"Straßenmusik"}
 
 net = Net(device)
 model_name = "mediocreModel_0.pt"
