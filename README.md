@@ -59,8 +59,7 @@ We are assume, that the tag latest exsists and references to the latest builded 
 ## Acknowledgments
 
 This repo is based on
-  - [Source 1](https://github.com/)
-  - [Source 2](https://github.com/)
+  - [Envirnmental-Sound-Classification](https://github.com/mariostrbac/environmental-sound-classification)
 
 Thanks to the original authors for their work!
 
