@@ -263,6 +263,6 @@ with open(output_file_name, 'w') as output_file:
 
             # print(file_path + " > '" + ix_to_class[result.item()] + "'")
             classifications.append(result.item())
-            output_file.write("  [Offset: %.2f] > '%s'\n" % (SOUND_DURATION*i, ix_to_class[result.item()]))
+            output_file.write("  [Offset: %.2f] > %s\n" % (SOUND_DURATION*i, ix_to_class[result.item()]))
         output_file.write("  Häufigste Klasse: " + str(ix_to_class[max(classifications, key=classifications.count)]) + "\n")
         output_file.write("\n")
