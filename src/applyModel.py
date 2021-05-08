@@ -189,6 +189,24 @@ def compute_melspectrogram_with_fixed_length(audio, sampling_rate, num_of_sample
 
     return melspectrogram_db
 
+def addGaußNoise():
+    if np.random.random() > self.add_noise_prob:
+        return spectrogram
+
+    # set some std value
+    min_pixel_value = np.min(spectrogram)
+    if self.std is None:
+      std_factor = 0.03     # factor number
+      std = np.abs(min_pixel_value*std_factor)
+
+    # generate a white noise spectrogram
+    gauss_mask = np.random.normal(self.mean,
+                                  std,
+                                  size=self.input_size).astype('float32')
+
+    # add white noise to the sound spectrogram
+    noisy_spectrogram = spectrogram + gauss_mask
+
 def apply(net, data_entry, device):
     x = data_entry.to(device)
 
@@ -198,27 +216,53 @@ def apply(net, data_entry, device):
 
     return predictions
 
-file_path = "../data/fold1/7061-6-0-0.wav"
-audio, sample_rate = librosa.load(file_path, duration=SOUND_DURATION, res_type='kaiser_fast')
-melspectrogram = compute_melspectrogram_with_fixed_length(audio, sample_rate)
-# convert into a Pandas DataFrame
-# (n_samples, channels, height, width) -> one sample on one channel
-input_data = torch.tensor(melspectrogram).unsqueeze(0).unsqueeze(0)
-print(input_data.shape)
+
+input_dir = "./testdata/"
 
 if torch.cuda.is_available():
   device = torch.device("cuda:0")
 else:
   device = torch.device("cpu")
-print(device)
+print("using device: ", device)
 
-model_name = "mediocreModel_0.pt"
+ix_to_class = {1:"Klimaanlage",
+                2:"Autohupe",
+                3:"Kinder Spielen",
+                4:"Hund bellt",
+                5:"Bohren",
+                6:"Motorgeräusche",
+                7:"Schuss",
+                8:"Presslufthammer",
+                9:"Sirene",
+                10:"Straßenmusik"}
+
 net = Net(device)
-# net = torch.load(model_name)
-
+model_name = "mediocreModel_0.pt"
 net.load_state_dict(torch.load(model_name, map_location={'cuda:0': 'cpu'}))
 net.eval() # set dropout and batch normalization to evaluation mode
-
 net = net.to(device)
-result = apply(net, input_data, device)
-print(result)
+
+output_file_name = "./ergebnisse.txt"
+with open(output_file_name, 'w') as output_file:
+    for file in os.listdir(input_dir):
+        file_path = input_dir + file
+        noise_length = librosa.get_duration(filename=file_path)
+
+        classifications = []
+        output_file.write("Klassifiziere " + file_path + "\n")
+        for i in range(int(noise_length / SOUND_DURATION)+1):
+            print("Klassifiziere [%d]: offset:%.2f" % (i, SOUND_DURATION*i))
+
+            audio, sample_rate = librosa.load(file_path, offset=SOUND_DURATION*i, duration=SOUND_DURATION, res_type='kaiser_fast')
+            melspectrogram = compute_melspectrogram_with_fixed_length(audio, sample_rate)
+
+            # (n_samples, channels, height, width) -> one sample on one channel
+            input_data = torch.tensor(melspectrogram).unsqueeze(0).unsqueeze(0)
+
+            result = apply(net, input_data, device)
+
+            # print(file_path + " > '" + ix_to_class[result.item()] + "'")
+            classifications.append(result.item())
+            output_file.write("  [Offset: %.2f] > '%s'\n" % (SOUND_DURATION*i, ix_to_class[result.item()]))
+        output_file.write("  Häufigste Klasse: " + str(ix_to_class[max(classifications, key=classifications.count)]) + "\n")
+        output_file.write("\n")
