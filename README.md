@@ -43,13 +43,23 @@ python src/demo.py --model model/student-jetson-model.pth --video 0
 > Additional comment about the demo.
 
 ## Docker
-HOW TO
+We are using a base image, which includes only the requirements.
+To build that image you can execute use `docker build -t docker.pkg.github.com/iw276/iw276ss21-p16/base_image -f base_image.dockerfile .`
+You can download the already crated container too currently you need the read packages permission do do this.
+If the base image can be found on your local system, you can build the app container with the following command `docker build -t docker.pkg.github.com/iw276/iw276ss21-p16/app -f app.dockerfile .`
+
+If you want to start a container, you can use this command:
+```
+docker run --runtime=nvidia -v soundtrack:/mnt/soundtrack -v out:/mnt/out docker.pkg.github.com/iw276/iw276ss21-p16/app:latest
+```
+
+We are assumed, that the tag latest exists and references to the latest built container image.
+
 
 ## Acknowledgments
 
 This repo is based on
-  - [Source 1](https://github.com/)
-  - [Source 2](https://github.com/)
+  - [Envirnmental-Sound-Classification](https://github.com/mariostrbac/environmental-sound-classification)
 
 Thanks to the original authors for their work!
 
