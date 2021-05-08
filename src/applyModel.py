@@ -231,7 +231,7 @@ net.load_state_dict(torch.load(model_name, map_location={'cuda:0': 'cpu'}))
 net.eval() # set dropout and batch normalization to evaluation mode
 net = net.to(device)
 
-output_file_name = "./ergebnisse.txt"
+output_file_name = "./out/ergebnisse.txt"
 with open(output_file_name, 'w', encoding='utf-8') as output_file:
     for file in os.listdir(input_dir):
         file_path = input_dir + file
