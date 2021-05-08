@@ -189,23 +189,8 @@ def compute_melspectrogram_with_fixed_length(audio, sampling_rate, num_of_sample
 
     return melspectrogram_db
 
-def addGaußNoise():
-    if np.random.random() > self.add_noise_prob:
-        return spectrogram
-
-    # set some std value
-    min_pixel_value = np.min(spectrogram)
-    if self.std is None:
-      std_factor = 0.03     # factor number
-      std = np.abs(min_pixel_value*std_factor)
-
-    # generate a white noise spectrogram
-    gauss_mask = np.random.normal(self.mean,
-                                  std,
-                                  size=self.input_size).astype('float32')
-
-    # add white noise to the sound spectrogram
-    noisy_spectrogram = spectrogram + gauss_mask
+def normalize(spectrogram, mean, std):
+    return (np.stack(spectrogram) - mean) / std
 
 def apply(net, data_entry, device):
     x = data_entry.to(device)
@@ -237,6 +222,8 @@ ix_to_class = { 0:"Klimaanlage",
                 9:"Straßenmusik"}
 
 
+norm_mean = np.load("mean.npy")
+norm_std = np.load("std.npy")
 
 net = Net(device)
 model_name = "mediocreModel_0.pt"
@@ -257,6 +244,8 @@ with open(output_file_name, 'w', encoding='utf-8') as output_file:
 
             audio, sample_rate = librosa.load(file_path, offset=SOUND_DURATION*i, duration=SOUND_DURATION, res_type='kaiser_fast')
             melspectrogram = compute_melspectrogram_with_fixed_length(audio, sample_rate)
+
+            melspectrogram = normalize(melspectrogram, norm_mean, norm_std)
 
             # (n_samples, channels, height, width) -> one sample on one channel
             input_data = torch.tensor(melspectrogram).unsqueeze(0).unsqueeze(0)
