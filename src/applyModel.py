@@ -236,6 +236,8 @@ ix_to_class = { 0:"Klimaanlage",
                 8:"Sirene",
                 9:"Straßenmusik"}
 
+
+
 net = Net(device)
 model_name = "mediocreModel_0.pt"
 net.load_state_dict(torch.load(model_name, map_location={'cuda:0': 'cpu'}))
@@ -243,7 +245,7 @@ net.eval() # set dropout and batch normalization to evaluation mode
 net = net.to(device)
 
 output_file_name = "./ergebnisse.txt"
-with open(output_file_name, 'w') as output_file:
+with open(output_file_name, 'w', encoding='utf-8') as output_file:
     for file in os.listdir(input_dir):
         file_path = input_dir + file
         noise_length = librosa.get_duration(filename=file_path)
