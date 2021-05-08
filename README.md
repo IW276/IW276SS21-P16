@@ -50,7 +50,8 @@ If the base image can be found on your local system, you can build the app conta
 
 If you want to start a container, you can use this command:
 ```
-docker run --runtime=nvidia -v soundtrack:/mnt/soundtrack -v out:/mnt/out docker.pkg.github.com/iw276/iw276ss21-p16/app:latest
+mkdir out
+docker run --runtime=nvidia -v $(realpath datasets):/mnt/testdata -v $(realpath out):/app/out docker.pkg.github.com/iw276/iw276ss21-p16/app:latest
 ```
 
 We are assumed, that the tag latest exists and references to the latest built container image.
