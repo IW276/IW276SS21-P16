@@ -4,7 +4,6 @@ import librosa
 import numpy as np
 import pandas as pd
 
-from tqdm import tqdm
 import pickle
 
 import torch
@@ -19,8 +18,6 @@ HOP_LENGTH = 512        # number of samples between successive frames
 WINDOW_LENGTH = 512     # length of the window in samples
 N_MEL = 128             # number of Mel bands to generate
 SOUND_DURATION = 2.95   # fixed duration of an audio excerpt in seconds
-
-torch.manual_seed(0)
 
 class Net(nn.Module):
     def __init__(self, device):
@@ -60,110 +57,12 @@ class Net(nn.Module):
         # dense layer-1
         x = self.fc1(x)
         x = F.relu(x)
-        x = F.dropout(x, p=0.5)
+        # x = F.dropout(x, p=0.5)
 
         # dense output layer
         x = self.fc2(x)
 
         return x
-
-    def fit(self, train_loader, epochs, val_loader=None):
-        history = {'loss':[], 'accuracy':[], 'val_loss':[], 'val_accuracy':[]}
-
-        for epoch in range(epochs):
-            self.train()
-
-            print("\nEpoch {}/{}".format(epoch+1, epochs))
-
-            with tqdm(total=len(train_loader), file=sys.stdout) as pbar:
-                for step, batch in enumerate(train_loader):
-                    X_batch = batch['spectrogram'].to(self.device)
-                    y_batch = batch['label'].to(self.device)
-
-                    # zero the parameter gradients
-                    self.optimizer.zero_grad()
-
-                    with torch.set_grad_enabled(True):
-                        # forward + backward
-                        outputs = self.forward(X_batch)
-                        batch_loss = self.criterion(outputs, y_batch)
-                        batch_loss.backward()
-
-                        # update the parameters
-                        self.optimizer.step()
-
-                    pbar.update(1)
-
-            # model evaluation - train data
-            train_loss, train_acc = self.evaluate(train_loader)
-            print("loss: %.4f - accuracy: %.4f" % (train_loss, train_acc), end='')
-
-            # model evaluation - validation data
-            val_loss, val_acc = None, None
-            if val_loader is not None:
-                val_loss, val_acc = self.evaluate(val_loader)
-                print(" - val_loss: %.4f - val_accuracy: %.4f" % (val_loss, val_acc))
-
-            # store the model's training progress
-            history['loss'].append(train_loss)
-            history['accuracy'].append(train_acc)
-            history['val_loss'].append(val_loss)
-            history['val_accuracy'].append(val_acc)
-
-        return history
-
-    def predict(self, X):
-        self.eval()
-
-        with torch.no_grad():
-            outputs = self.forward(X)
-
-        return outputs
-
-    def evaluate(self, data_loader):
-        running_loss = torch.tensor(0.0).to(self.device)
-        running_acc = torch.tensor(0.0).to(self.device)
-
-        batch_size = torch.tensor(data_loader.batch_size).to(self.device)
-
-        for step, batch in enumerate(data_loader):
-            X_batch = batch['spectrogram'].to(self.device)
-            y_batch = batch['label'].to(self.device)
-
-            outputs = self.predict(X_batch)
-
-            # get batch loss
-            loss = self.criterion(outputs, y_batch)
-            running_loss = running_loss + loss
-
-            # calculate batch accuracy
-            predictions = torch.argmax(outputs, dim=1)
-            correct_predictions = (predictions == y_batch).float().sum()
-            running_acc = running_acc + torch.div(correct_predictions, batch_size)
-
-        loss = running_loss.item() / (step+1)
-        accuracy = running_acc.item() / (step+1)
-
-        return loss, accuracy
-
-def normalize_data(train_df, test_df):
-    # compute the mean and std (pixel-wise)
-    mean = train_df['melspectrogram'].mean()
-    std = np.std(np.stack(train_df['melspectrogram']), axis=0)
-
-    # normalize train set
-    train_spectrograms = (np.stack(train_df['melspectrogram']) - mean) / std
-    train_labels = train_df['label'].to_numpy()
-    train_folds = train_df['fold'].to_numpy()
-    train_df = pd.DataFrame(zip(train_spectrograms, train_labels, train_folds), columns=['melspectrogram', 'label', 'fold'])
-
-    # normalize test set
-    test_spectrograms = (np.stack(test_df['melspectrogram']) - mean) / std
-    test_labels = test_df['label'].to_numpy()
-    test_folds = test_df['fold'].to_numpy()
-    test_df = pd.DataFrame(zip(test_spectrograms, test_labels, test_folds), columns=['melspectrogram', 'label', 'fold'])
-
-    return train_df, test_df
 
 def compute_melspectrogram_with_fixed_length(audio, sampling_rate, num_of_samples=128):
     try:
@@ -201,8 +100,6 @@ def apply(net, data_entry, device):
 
     outputs = net(x)
 
-    # print(prob(outputs))
-    # print(torch.max(prob(outputs)).item())
     if(torch.max(prob(outputs)).item() > threshold):
         predictions = torch.argmax(outputs, dim=1).item()
     else:
@@ -238,12 +135,16 @@ norm_std = np.load("std.npy")
 net = Net(device)
 model_name = "mediocreModel_0.pt"
 net.load_state_dict(torch.load(model_name, map_location={'cuda:0': 'cpu'}))
-net.eval() # set dropout and batch normalization to evaluation mode
 net = net.to(device)
+net.train(False)
+net.eval() # set dropout and batch normalization to evaluation mode
 
 output_file_name = "./out/ergebnisse.txt"
 with open(output_file_name, 'w', encoding='utf-8') as output_file:
     for file in os.listdir(input_dir):
+        if not file.endswith(".wav"):
+            print("skipping " + file)
+            continue
         file_path = input_dir + file
         noise_length = librosa.get_duration(filename=file_path)
 
