@@ -20,6 +20,8 @@ WINDOW_LENGTH = 512     # length of the window in samples
 N_MEL = 128             # number of Mel bands to generate
 SOUND_DURATION = 2.95   # fixed duration of an audio excerpt in seconds
 
+torch.manual_seed(0)
+
 class Net(nn.Module):
     def __init__(self, device):
         super(Net, self).__init__()
@@ -192,12 +194,19 @@ def compute_melspectrogram_with_fixed_length(audio, sampling_rate, num_of_sample
 def normalize(spectrogram, mean, std):
     return (np.stack(spectrogram) - mean) / std
 
+prob = nn.Softmax(dim=-1)
+threshold = 0.45
 def apply(net, data_entry, device):
     x = data_entry.to(device)
 
     outputs = net(x)
 
-    predictions = torch.argmax(outputs, dim=1)
+    # print(prob(outputs))
+    # print(torch.max(prob(outputs)).item())
+    if(torch.max(prob(outputs)).item() > threshold):
+        predictions = torch.argmax(outputs, dim=1).item()
+    else:
+        predictions = -1
 
     return predictions
 
@@ -210,7 +219,8 @@ else:
   device = torch.device("cpu")
 print("using device: ", device)
 
-ix_to_class = { 0:"Klimaanlage",
+ix_to_class = { -1:"Unklar",
+                0:"Klimaanlage",
                 1:"Autohupe",
                 2:"Kinder Spielen",
                 3:"Hund bellt",
@@ -253,7 +263,7 @@ with open(output_file_name, 'w', encoding='utf-8') as output_file:
             result = apply(net, input_data, device)
 
             # print(file_path + " > '" + ix_to_class[result.item()] + "'")
-            classifications.append(result.item())
-            output_file.write("  [Offset: %.2f] > %s\n" % (SOUND_DURATION*i, ix_to_class[result.item()]))
+            classifications.append(result)
+            output_file.write("  [Offset: %.2f] > %s\n" % (SOUND_DURATION*i, ix_to_class[result]))
         output_file.write("  Häufigste Klasse: " + str(ix_to_class[max(classifications, key=classifications.count)]) + "\n")
         output_file.write("\n")
