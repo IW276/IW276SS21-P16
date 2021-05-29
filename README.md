@@ -7,7 +7,7 @@ Short introduction to project assigment.
   Link to Demo Video
 </p>
 
-> This work was done by Autor 1, Autor2, Autor 3 during the IW276 Autonome Systeme Labor at the Karlsruhe University of Applied Sciences (Hochschule Karlruhe - Technik und Wirtschaft) in WS 2020 / 2021. 
+> This work was done by Jonashar, Mack0438, and subpathdev during the IW276 Autonome Systeme Labor at the Karlsruhe University of Applied Sciences (Hochschule Karlruhe - Technik und Wirtschaft) in SS 2021. 
 
 ## Table of Contents
 
@@ -38,23 +38,22 @@ Pre-trained model is available at pretrained-models/
 
 To run the demo, pass path to the pre-trained checkpoint and camera id (or path to video file):
 ```
-python src/demo.py --model model/student-jetson-model.pth --video 0
+python src/applyModel.py
 ```
-> Additional comment about the demo.
 
 ## Docker
-We are using a base image, which includes only the requirements.
-To build that image you can execute use `docker build -t docker.pkg.github.com/iw276/iw276ss21-p16/base_image -f base_image.dockerfile .`
-You can download the already crated container too currently you need the read packages permission do do this.
-If the base image can be found on your local system, you can build the app container with the following command `docker build -t docker.pkg.github.com/iw276/iw276ss21-p16/app -f app.dockerfile .`
+We are using a base image which includes only the requirements.
+To build that image you can execute use `docker build -t docker.pkg.github.com/iw276/iw276ss21-p16/base_image -f base_image.dockerfile`.
+You can download the already created container too currently you need the read packages permission do do this.
+If the base image can be found on your local system you can build the app container with the following command `docker build -t docker.pkg.github.com/iw276/iw276ss21-p16/app -f app.dockerfile`.
 
-If you want to start a container, you can use this command:
+To start the container you can use the following command where the directory `datasets` contains all tested files.
 ```
 mkdir out
 docker run --runtime=nvidia -v $(realpath datasets):/app/testdata -v $(realpath out):/app/out docker.pkg.github.com/iw276/iw276ss21-p16/app:latest
 ```
 
-We are assumed, that the tag latest exists and references to the latest built container image.
+We are assumed that the tag latest exists and references to the latest built container image.
 
 
 ## Acknowledgments
